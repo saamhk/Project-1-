@@ -1,0 +1,59 @@
+---
+title: "Bones"
+author: "Saam"
+date: "2024-10-10"
+output: html_document
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(Matrix)
+library(lme4)
+library(emmeans)
+Bones <- read.csv("Bones.csv", header = TRUE)
+```
+Convert Embryo and Medium to factors
+```{r echo=FALSE}
+Bones$Embryo <- as.factor(Bones$Embryo)
+Bones$Medium <- as.factor(Bones$Medium)
+lme_model <- lmer(Weight ~ Medium + (1|Embryo), data = Bones)
+```
+Residual vs Fitted Plot
+```{r echo=FALSE}
+plot(fitted(lme_model), resid(lme_model), 
+     main = "Residual vs Fitted",
+     xlab = "Fitted",
+     ylab = "Residual")
+abline(h = 0, col = "purple", lwd = 2)
+```
+ Q-Q plot for residuals of the linear mixed model to show normality
+```{r echo=FALSE}
+qqnorm(resid(lme_model), main = "Q-Q Plot")
+qqline(resid(lme_model), col = "purple", lwd = 2)
+```
+Bartlett's test to check for homogeneity of variances between groups
+```{r echo=FALSE}
+bartlett_test <- bartlett.test(Weight ~ Medium, data = Bones)
+print(bartlett_test)
+```
+Given the Bartlett result gives a p value of roughly 0.65, it is safe to assume there is homogeneity of variances, we can now perform ANOVA to check for overall differences in bone weight between the mediums
+```{r echo=FALSE}
+anova_model <- aov(Weight ~ Medium, data = Bones)
+summary(anova_model)
+```
+The small p-value indicates that the difference in weight is not random, and the large F value indicates that it is very likely to be the case due to the medium.
+Now, we have performed a *Tukey-HSD/Estimated-Marginal-Means Test:
+```{r echo=FALSE}
+TukeyHSD(anova_model)
+emm <- emmeans(anova_model, pairwise ~ Medium)
+summary(emm)
+
+#Predicted vs Actual Values Test
+ggplot(Bones, aes(x = fitted(lme_model), y = Weight)) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0, col = "purple") +
+  labs(title = "Predicted vs Actual Values",
+       x = "Predicted Values",
+       y = "Actual Values")
+```
+
