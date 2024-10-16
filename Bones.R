@@ -1,11 +1,15 @@
 Bones <- read.csv("/Users/student/Library/Mobile Documents/com~apple~CloudDocs/Uni/Group Project/Bones.csv", header = TRUE)
 
+# Bartlett -------------------------------------------------------------------
+
+bartlett_test <- bartlett.test(Weight ~ Medium, data = Bones)
+print(bartlett_test) # p-value of 0.6542, therefore we can assume homogeneity of variances and proceed with ANOVA
+
 # ANOVA -------------------------------------------------------------------
 
 anova <- aov(Weight ~ Medium, data = Bones)
 summary(anova) #f-statistic very small so reject H0 that medium does not effect
                           #Weight
-
 
 # Linear Mixed Effect Model Analysis -------------------------------------------------------------------
 
